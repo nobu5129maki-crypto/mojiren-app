@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>もじれん - 自己肯定感アップ日記</title>
+    <!-- PWA Settings -->
+    <meta name="theme-color" content="#F8BBD0">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background-color: #FFF9FB;
+            color: #5D4037;
+        }
+        .pastel-pink { background-color: #F8BBD0; }
+        .pastel-blue { background-color: #E1F5FE; }
+        .pastel-yellow { background-color: #FFF176; }
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 50;
+        }
+        .input-focus:focus {
+            outline: 2px solid #F8BBD0;
+            border-color: transparent;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #FFF176;
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 100;
+        }
+        .flower-badge {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .bloom-animation {
+            animation: scaleUp 0.5s ease-out;
+        }
+        @keyframes scaleUp {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- Notification Simulation -->
+    <div id="reminder" class="notification text-sm font-bold">
+        今日も良いことを探しましょう ✨
+    </div>
+
+    <!-- Celebration Message -->
+    <div id="celebration" class="notification text-sm font-bold bg-pink-100 text-pink-600 border-2 border-pink-300">
+        おめでとう！3日連続でお花が咲きました 🌸
+    </div>
+
+    <!-- Header -->
+    <header class="p-4 text-center sticky top-0 bg-[#FFF9FB] z-40 flex justify-between items-center px-6">
+        <div class="w-10"></div>
+        <h1 class="text-2xl font-bold tracking-wider">もじれん</h1>
+        <div id="streak-status" class="flex flex-col items-center">
+            <div id="flower-icon" class="text-2xl flower-badge">🌱</div>
+            <div id="streak-count" class="text-[10px] font-bold text-gray-400">0日目</div>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto p-4">
+        <!-- Input Form Section -->
+        <section id="input-section" class="mb-8">
+            <div class="card p-6 border-2 border-[#F8BBD0] bg-white">
+                <h2 class="text-lg font-bold mb-4 text-center">今日を記録する</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-pink-400 flex items-center mb-1">
+                            <span class="mr-1">😊</span> 楽しかったこと
+                        </label>
+                        <textarea id="enjoyed" maxlength="140" placeholder="例：美味しいコーヒーを飲んだ" class="w-full p-3 rounded-xl bg-pink-50 text-sm input-focus h-20 resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-blue-400 flex items-center mb-1">
+                            <span class="mr-1">✅</span> できたこと
+                        </label>
+                        <textarea id="achieved" maxlength="140" placeholder="例：5分だけ掃除ができた" class="w-full p-3 rounded-xl bg-blue-50 text-sm input-focus h-20 resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-yellow-500 flex items-center mb-1">
+                            <span class="mr-1">🧡</span> 感謝したこと
+                        </label>
+                        <textarea id="thankful" maxlength="140" placeholder="例：同僚が手伝ってくれた" class="w-full p-3 rounded-xl bg-yellow-50 text-sm input-focus h-20 resize-none"></textarea>
+                    </div>
+                    <button onclick="saveEntry()" class="w-full py-4 pastel-pink rounded-2xl font-bold hover:opacity-90 transition shadow-md">
+                        心にとめる
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Timeline Section -->
+        <section id="timeline-section" class="space-y-4">
+            <h2 class="text-lg font-bold px-2">振り返り</h2>
+            <div id="entry-list" class="space-y-4">
+                <!-- Records will be added here -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="flex flex-col items-center text-pink-400">
+            <span class="text-xl">✨</span>
+            <span class="text-[10px]">振り返り</span>
+        </button>
+        <button class="flex flex-col items-center text-gray-400">
+            <span class="text-xl">📅</span>
+            <span class="text-[10px]">カレンダー</span>
+        </button>
+    </nav>
+
+    <script>
+        // Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(reg => {
+                    console.log('Service Worker registered.');
+                }).catch(err => {
+                    console.log('Service Worker registration failed: ', err);
+                });
+            });
+        }
+
+        // Initialize Data
+        let entries = JSON.parse(localStorage.getItem('mojiren_entries') || '[]');
+
+        // Calculate continuous streak
+        function calculateStreak() {
+            if (entries.length === 0) return 0;
+            
+            const sortedEntries = entries.map(e => new Date(e.date)).sort((a, b) => b - a);
+            let streak = 0;
+            let currentDate = new Date();
+            currentDate.setHours(0,0,0,0);
+
+            const todayStr = new Date().toLocaleDateString('ja-JP');
+            const lastEntryDate = new Date(sortedEntries[0]);
+            lastEntryDate.setHours(0,0,0,0);
+
+            // Break streak if last entry was not today or yesterday
+            const diffTime = Math.abs(currentDate - lastEntryDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays > 1 && sortedEntries[0].toLocaleDateString('ja-JP') !== todayStr) return 0;
+
+            // Count backwards
+            let checkDate = new Date(lastEntryDate);
+            let entryDates = new Set(entries.map(e => new Date(e.date).toLocaleDateString('ja-JP')));
+
+            while (entryDates.has(checkDate.toLocaleDateString('ja-JP'))) {
+                streak++;
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+            return streak;
+        }
+
+        // Update Gamification UI
+        function updateFlowerUI() {
+            const streak = calculateStreak();
+            const iconEl = document.getElementById('flower-icon');
+            const countEl = document.getElementById('streak-count');
+            
+            countEl.innerText = `${streak}日連続`;
+            
+            if (streak >= 3) {
+                iconEl.innerText = '🌸';
+                iconEl.classList.add('bloom-animation');
+            } else if (streak === 2) {
+                iconEl.innerText = '🌿';
+                iconEl.classList.remove('bloom-animation');
+            } else if (streak === 1) {
+                iconEl.innerText = '🌱';
+                iconEl.classList.remove('bloom-animation');
+            } else {
+                iconEl.innerText = '💤';
+                countEl.innerText = 'おやすみ中';
+            }
+            return streak;
+        }
+
+        // Render Diary Entries
+        function renderEntries() {
+            const list = document.getElementById('entry-list');
+            list.innerHTML = '';
+            
+            updateFlowerUI();
+
+            if (entries.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-10 text-gray-400">
+                        <div class="text-4xl mb-2">🌿</div>
+                        <p class="text-sm">まだ記録がありません。<br>最初の一歩を書き出してみませんか？</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Show latest entries first
+            entries.slice().reverse().forEach((entry, index) => {
+                const card = document.createElement('div');
+                card.className = 'card p-4 fade-in';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-gray-400">${entry.date}</span>
+                        <button onclick="deleteEntry(${entries.length - 1 - index})" class="text-gray-300 hover:text-red-300">✕</button>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-[10px] text-pink-300 font-bold">楽しかった</p>
+                            <p class="text-sm">${entry.enjoyed}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-blue-300 font-bold">できた</p>
+                            <p class="text-sm">${entry.achieved}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-yellow-500 font-bold">感謝した</p>
+                            <p class="text-sm">${entry.thankful}</p>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        // Save new entry
+        function saveEntry() {
+            const enjoyed = document.getElementById('enjoyed').value;
+            const achieved = document.getElementById('achieved').value;
+            const thankful = document.getElementById('thankful').value;
+
+            if (!enjoyed || !achieved || !thankful) {
+                alert('すべての項目を入力してくださいね 🌿');
+                return;
+            }
+
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('ja-JP');
+            const alreadyEntryToday = entries.some(e => e.date === dateStr);
+
+            const newEntry = {
+                date: dateStr,
+                enjoyed,
+                achieved,
+                thankful
+            };
+
+            entries.push(newEntry);
+            localStorage.setItem('mojiren_entries', JSON.stringify(entries));
+            
+            // Clear form
+            document.getElementById('enjoyed').value = '';
+            document.getElementById('achieved').value = '';
+            document.getElementById('thankful').value = '';
+            
+            renderEntries();
+
+            // Check for 3-day streak
+            const newStreak = calculateStreak();
+            if (newStreak === 3 && !alreadyEntryToday) {
+                const celeb = document.getElementById('celebration');
+                celeb.style.display = 'block';
+                setTimeout(() => { celeb.style.display = 'none'; }, 5000);
+            }
+
+            window.scrollTo({ top: document.getElementById('timeline-section').offsetTop - 100, behavior: 'smooth' });
+        }
+
+        // Delete specific entry
+        function deleteEntry(index) {
+            if (confirm('この記録を消してもよろしいですか？')) {
+                entries.splice(index, 1);
+                localStorage.setItem('mojiren_entries', JSON.stringify(entries));
+                renderEntries();
+            }
+        }
+
+        // Initialize UI on load
+        window.onload = () => {
+            renderEntries();
+            setTimeout(() => {
+                const reminder = document.getElementById('reminder');
+                reminder.style.display = 'block';
+                setTimeout(() => {
+                    reminder.style.display = 'none';
+                }, 4000);
+            }, 1000);
+        };
+    </script>
+</body>
+</html>
