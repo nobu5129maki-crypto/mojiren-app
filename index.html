@@ -2,79 +2,351 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>あげあげ プレビュー</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>あげあげ - 自己肯定感アップ日記</title>
+    
+    <!-- PWA Settings -->
+    <meta name="theme-color" content="#F8BBD0">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        .guide-box { background: #f0f4f8; border-left: 5px solid #F8BBD0; padding: 20px; margin-bottom: 30px; border-radius: 8px; }
-        .preview-container { border: 8px solid #333; border-radius: 40px; width: 375px; height: 667px; margin: 0 auto; overflow: hidden; position: relative; background: white; }
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background-color: #FFF9FB;
+            color: #5D4037;
+        }
+        .pastel-pink { background-color: #F8BBD0; }
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 50;
+        }
+        .input-focus:focus {
+            outline: 2px solid #F8BBD0;
+            border-color: transparent;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #FFF176;
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 100;
+        }
+        .flower-badge {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .bloom-animation {
+            animation: scaleUp 0.5s ease-out;
+        }
+        @keyframes scaleUp {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
-<body class="p-8 bg-gray-50">
+<body class="pb-24">
 
-    <div class="max-w-4xl mx-auto">
-        <h1 class="text-3xl font-bold mb-6 text-pink-500 text-center">✨ アプリ完成プレビュー ✨</h1>
-
-        <!-- 1. ガイド部分 -->
-        <div class="guide-box">
-            <h2 class="text-xl font-bold mb-2">📋 使い方・表示の確認方法</h2>
-            <ul class="list-disc ml-5 space-y-2 text-gray-700">
-                <li><strong>右側の画面：</strong> この画面の下に、実際のスマホでの動きを再現したシミュレーターがあります。</li>
-                <li><strong>修正・削除：</strong> 日記を書いたあと、カードの<strong>「✎」</strong>で直し、<strong>「✕」</strong>で消せます。</li>
-                <li><strong>WordPressへ：</strong> 別ファイルの「ブログ掲載用ガイド」にあるHTMLコードをカスタムHTMLブロックに貼ってください。</li>
-            </ul>
-        </div>
-
-        <!-- 2. スマホシミュレーター -->
-        <div class="text-center mb-4">
-            <span class="bg-gray-800 text-white px-4 py-1 rounded-full text-sm">スマホでの表示イメージ</span>
-        </div>
-        
-        <div class="preview-container shadow-2xl">
-            <!-- 実際のアプリコードをiframe的に表示するシミュレーション -->
-            <iframe srcdoc='
-                <!DOCTYPE html>
-                <html lang="ja">
-                <head>
-                    <script src="https://cdn.tailwindcss.com"></script>
-                    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
-                    <style>
-                        body { font-family: "Zen Maru Gothic", sans-serif; background: #FFF9FB; color: #5D4037; height: 100vh; margin: 0; padding-bottom: 80px; }
-                        .card { background: white; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; padding: 15px; }
-                        .btn-pink { background: #F8BBD0; color: white; font-weight: bold; border-radius: 12px; }
-                    </style>
-                </head>
-                <body class="p-4">
-                    <div class="text-center mb-6">
-                        <h1 class="text-xl font-bold">あげあげ</h1>
-                        <div class="text-3xl mt-2">🌱</div>
-                        <div class="text-[10px] text-gray-400">1日連続</div>
-                    </div>
-                    
-                    <div class="card border-2 border-pink-200">
-                        <h2 class="text-sm font-bold mb-3 text-center">今日を記録する</h2>
-                        <textarea placeholder="楽しかったこと" class="w-full p-2 mb-2 bg-pink-50 rounded-lg text-xs h-12"></textarea>
-                        <textarea placeholder="できたこと" class="w-full p-2 mb-2 bg-blue-50 rounded-lg text-xs h-12"></textarea>
-                        <textarea placeholder="感謝したこと" class="w-full p-2 mb-3 bg-yellow-50 rounded-lg text-xs h-12"></textarea>
-                        <button class="w-full py-2 btn-pink shadow-md">心にとめる</button>
-                    </div>
-
-                    <h3 class="font-bold text-sm mb-3">振り返り</h3>
-                    <div class="card">
-                        <div class="flex justify-between text-[10px] mb-2 text-gray-400">
-                            <span>2026/1/17</span>
-                            <div><span class="mr-2">✎</span><span>✕</span></div>
-                        </div>
-                        <p class="text-xs">😊 コーヒーが美味しかった</p>
-                    </div>
-                </body>
-                </html>
-            ' style="width:100%; height:100%; border:none;"></iframe>
-        </div>
-
-        <div class="mt-10 text-center text-gray-500 text-sm">
-            <p>※実際の全機能（保存など）を動かすには <strong>index.html</strong> を開き、<br>右上の「Preview」ボタンを押してください。</p>
-        </div>
+    <!-- 通知エリア -->
+    <div id="reminder" class="notification text-sm font-bold">
+        今日も良いことを探しましょう ✨
     </div>
 
+    <!-- お祝いメッセージ -->
+    <div id="celebration" class="notification text-sm font-bold bg-pink-100 text-pink-600 border-2 border-pink-300 text-center">
+        おめでとう！<br>3日連続でお花が咲きました 🌸
+    </div>
+
+    <!-- ヘッダー -->
+    <header class="p-4 text-center sticky top-0 bg-[#FFF9FB] z-40 flex justify-between items-center px-6">
+        <div class="w-10"></div>
+        <h1 class="text-2xl font-bold tracking-wider">あげあげ</h1>
+        <div id="streak-status" class="flex flex-col items-center">
+            <div id="flower-icon" class="text-2xl flower-badge">🌱</div>
+            <div id="streak-count" class="text-[10px] font-bold text-gray-400">0日目</div>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto p-4">
+        <!-- 入力セクション -->
+        <section id="input-section" class="mb-8">
+            <div class="card p-6 border-2 border-[#F8BBD0] bg-white">
+                <h2 id="form-title" class="text-lg font-bold mb-4 text-center">今日を記録する</h2>
+                <!-- 修正用のIDを保持する隠し入力 -->
+                <input type="hidden" id="edit-index" value="-1">
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-pink-400 flex items-center mb-1">
+                            <span class="mr-1">😊</span> 楽しかったこと
+                        </label>
+                        <textarea id="enjoyed" maxlength="140" placeholder="例：美味しいコーヒーを飲んだ" class="w-full p-3 rounded-xl bg-pink-50 text-sm input-focus h-20 resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-blue-400 flex items-center mb-1">
+                            <span class="mr-1">✅</span> できたこと
+                        </label>
+                        <textarea id="achieved" maxlength="140" placeholder="例：5分だけ掃除ができた" class="w-full p-3 rounded-xl bg-blue-50 text-sm input-focus h-20 resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-yellow-500 flex items-center mb-1">
+                            <span class="mr-1">🧡</span> 感謝したこと
+                        </label>
+                        <textarea id="thankful" maxlength="140" placeholder="例：同僚が手伝ってくれた" class="w-full p-3 rounded-xl bg-yellow-50 text-sm input-focus h-20 resize-none"></textarea>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button id="cancel-edit" onclick="cancelEdit()" class="hidden flex-1 py-4 bg-gray-100 text-gray-400 rounded-2xl font-bold transition">やめる</button>
+                        <button id="save-btn" onclick="saveEntry()" class="flex-[2] py-4 pastel-pink text-white rounded-2xl font-bold hover:opacity-90 transition shadow-md">
+                            心にとめる
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 振り返りセクション -->
+        <section id="timeline-section" class="space-y-4">
+            <h2 class="text-lg font-bold px-2 text-gray-600">これまでの足跡</h2>
+            <div id="entry-list" class="space-y-4">
+                <!-- 記録がここに動的に追加されます -->
+            </div>
+        </section>
+    </main>
+
+    <!-- 下部ナビゲーション -->
+    <nav class="bottom-nav">
+        <button class="flex flex-col items-center text-pink-400">
+            <span class="text-xl">✨</span>
+            <span class="text-[10px]">振り返り</span>
+        </button>
+        <button class="flex flex-col items-center text-gray-400">
+            <span class="text-xl">📅</span>
+            <span class="text-[10px]">カレンダー</span>
+        </button>
+    </nav>
+
+    <script>
+        // データの初期化（LocalStorageから取得）
+        let entries = JSON.parse(localStorage.getItem('age_entries') || '[]');
+
+        // 継続日数の計算ロジック
+        function calculateStreak() {
+            if (entries.length === 0) return 0;
+            
+            const uniqueDates = [...new Set(entries.map(e => e.date))].sort((a, b) => new Date(b) - new Date(a));
+            let streak = 0;
+            let today = new Date();
+            today.setHours(0,0,0,0);
+            
+            let lastEntryDate = new Date(uniqueDates[0]);
+            lastEntryDate.setHours(0,0,0,0);
+            
+            // 今日または昨日から始まっていない場合は0日
+            const diffDays = (today - lastEntryDate) / (1000 * 60 * 60 * 24);
+            if (diffDays > 1) return 0;
+
+            let checkDate = new Date(lastEntryDate);
+            const entrySet = new Set(uniqueDates);
+
+            while (entrySet.has(checkDate.toLocaleDateString('ja-JP'))) {
+                streak++;
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+            return streak;
+        }
+
+        // UI（お花の状態）を更新
+        function updateFlowerUI() {
+            const streak = calculateStreak();
+            const iconEl = document.getElementById('flower-icon');
+            const countEl = document.getElementById('streak-count');
+            
+            countEl.innerText = `${streak}日連続`;
+            
+            if (streak >= 3) {
+                iconEl.innerText = '🌸';
+                iconEl.classList.add('bloom-animation');
+            } else if (streak === 2) {
+                iconEl.innerText = '🌿';
+                iconEl.classList.remove('bloom-animation');
+            } else if (streak === 1) {
+                iconEl.innerText = '🌱';
+                iconEl.classList.remove('bloom-animation');
+            } else {
+                iconEl.innerText = '💤';
+                countEl.innerText = 'おやすみ中';
+            }
+        }
+
+        // 記録一覧を描画
+        function renderEntries() {
+            const list = document.getElementById('entry-list');
+            list.innerHTML = '';
+            updateFlowerUI();
+
+            if (entries.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-10 text-gray-400">
+                        <div class="text-4xl mb-2">🌿</div>
+                        <p class="text-sm">まだ記録がありません。<br>今日を心にとめてみませんか？</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // 新しい順に表示
+            [...entries].reverse().forEach((entry, index) => {
+                const actualIndex = entries.length - 1 - index;
+                const card = document.createElement('div');
+                card.className = 'card p-4 fade-in mb-4';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-gray-400">${entry.date}</span>
+                        <div class="flex gap-4">
+                            <button onclick="editEntry(${actualIndex})" class="text-blue-300 hover:text-blue-500 transition" title="修正">✎ 修正</button>
+                            <button onclick="deleteEntry(${actualIndex})" class="text-red-200 hover:text-red-400 transition" title="削除">✕ 削除</button>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-[10px] text-pink-300 font-bold">楽しかった</p>
+                            <p class="text-sm">${entry.enjoyed}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-blue-300 font-bold">できた</p>
+                            <p class="text-sm">${entry.achieved}</p>
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-yellow-500 font-bold">感謝した</p>
+                            <p class="text-sm">${entry.thankful}</p>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        // 保存（新規作成 or 更新）
+        function saveEntry() {
+            const enjoyed = document.getElementById('enjoyed').value;
+            const achieved = document.getElementById('achieved').value;
+            const thankful = document.getElementById('thankful').value;
+            const editIndex = parseInt(document.getElementById('edit-index').value);
+
+            if (!enjoyed || !achieved || !thankful) {
+                alert('すべての項目を入力してくださいね ✨');
+                return;
+            }
+
+            if (editIndex > -1) {
+                // 更新処理
+                entries[editIndex].enjoyed = enjoyed;
+                entries[editIndex].achieved = achieved;
+                entries[editIndex].thankful = thankful;
+                cancelEdit();
+            } else {
+                // 新規追加
+                const dateStr = new Date().toLocaleDateString('ja-JP');
+                const alreadyEntryToday = entries.some(e => e.date === dateStr);
+                
+                entries.push({ date: dateStr, enjoyed, achieved, thankful });
+                
+                // お祝い演出のトリガー
+                if (calculateStreak() === 3 && !alreadyEntryToday) {
+                    const celeb = document.getElementById('celebration');
+                    celeb.style.display = 'block';
+                    setTimeout(() => { celeb.style.display = 'none'; }, 5000);
+                }
+            }
+
+            localStorage.setItem('age_entries', JSON.stringify(entries));
+            
+            // フォームクリア
+            document.getElementById('enjoyed').value = '';
+            document.getElementById('achieved').value = '';
+            document.getElementById('thankful').value = '';
+            
+            renderEntries();
+        }
+
+        // 修正モードへ切り替え
+        function editEntry(index) {
+            const entry = entries[index];
+            document.getElementById('enjoyed').value = entry.enjoyed;
+            document.getElementById('achieved').value = entry.achieved;
+            document.getElementById('thankful').value = entry.thankful;
+            document.getElementById('edit-index').value = index;
+            
+            document.getElementById('form-title').innerText = "記録を修正する";
+            document.getElementById('save-btn').innerText = "修正を保存する";
+            document.getElementById('cancel-edit').classList.remove('hidden');
+            
+            // フォームまでスクロール
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 修正のキャンセル
+        function cancelEdit() {
+            document.getElementById('enjoyed').value = '';
+            document.getElementById('achieved').value = '';
+            document.getElementById('thankful').value = '';
+            document.getElementById('edit-index').value = "-1";
+            document.getElementById('form-title').innerText = "今日を記録する";
+            document.getElementById('save-btn').innerText = "心にとめる";
+            document.getElementById('cancel-edit').classList.add('hidden');
+        }
+
+        // 削除処理
+        function deleteEntry(index) {
+            if (confirm('この記録を消してもよろしいですか？')) {
+                entries.splice(index, 1);
+                localStorage.setItem('age_entries', JSON.stringify(entries));
+                renderEntries();
+            }
+        }
+
+        // ページ読み込み時の処理
+        window.onload = () => {
+            renderEntries();
+            
+            //  gentle reminder
+            setTimeout(() => {
+                const reminder = document.getElementById('reminder');
+                reminder.style.display = 'block';
+                setTimeout(() => { reminder.style.display = 'none'; }, 4000);
+            }, 1000);
+        };
+    </script>
 </body>
 </html>
