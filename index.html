@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>あげあげ - 自己肯定感アップ日記</title>
+    
+    <!-- PWA Settings -->
+    <meta name="theme-color" content="#F8BBD0">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            background-color: #FFF9FB;
+            color: #5D4037;
+        }
+        .pastel-pink { background-color: #F8BBD0; }
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 50;
+        }
+        .input-focus:focus {
+            outline: 2px solid #F8BBD0;
+            border-color: transparent;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #FFF176;
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: none;
+            z-index: 100;
+        }
+        .flower-badge {
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+        .calendar-day {
+            aspect-ratio: 1 / 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .calendar-day:hover { background-color: #FFF1F5; }
+        .calendar-day.today { border: 2px solid #F8BBD0; font-weight: bold; }
+        .calendar-day.has-entry::after {
+            content: '';
+            width: 4px;
+            height: 4px;
+            background-color: #F8BBD0;
+            border-radius: 50%;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- 通知エリア -->
+    <div id="reminder" class="notification text-sm font-bold">
+        今日も良いことを探しましょう ✨
+    </div>
+
+    <!-- お祝いメッセージ -->
+    <div id="celebration" class="notification text-sm font-bold bg-pink-100 text-pink-600 border-2 border-pink-300 text-center">
+        おめでとう！<br>3日連続でお花が咲きました 🌸
+    </div>
+
+    <!-- ヘッダー -->
+    <header class="p-4 text-center sticky top-0 bg-[#FFF9FB] z-40 flex justify-between items-center px-6">
+        <div class="w-10"></div>
+        <h1 class="text-2xl font-bold tracking-wider">あげあげ</h1>
+        <div id="streak-status" class="flex flex-col items-center">
+            <div id="flower-icon" class="text-2xl flower-badge">🌱</div>
+            <div id="streak-count" class="text-[10px] font-bold text-gray-400">0日目</div>
+        </div>
+    </header>
+
+    <!-- メインビュー（振り返り） -->
+    <main id="main-view" class="max-w-md mx-auto p-4">
+        <!-- 入力セクション -->
+        <section id="input-section" class="mb-8">
+            <div class="card p-6 border-2 border-[#F8BBD0] bg-white">
+                <h2 id="form-title" class="text-lg font-bold mb-4 text-center">今日を記録する</h2>
+                <input type="hidden" id="edit-index" value="-1">
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-pink-400 flex items-center mb-1">
+                            <span class="mr-1">😊</span> 楽しかったこと
+                        </label>
+                        <textarea id="enjoyed" maxlength="140" placeholder="例：美味しいコーヒーを飲んだ" class="w-full p-3 rounded-xl bg-pink-50 text-sm input-focus h-20 resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-blue-400 flex items-center mb-1">
+                            <span class="mr-1">✅</span> できたこと
+                        </label>
+                        <textarea id="achieved" maxlength="140" placeholder="例：5分だけ掃除ができた" class="w-full p-3 rounded-xl bg-blue-50 text-sm input-focus h-20 resize-none"></textarea>
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-yellow-500 flex items-center mb-1">
+                            <span class="mr-1">🧡</span> 感謝したこと
+                        </label>
+                        <textarea id="thankful" maxlength="140" placeholder="例：同僚が手伝ってくれた" class="w-full p-3 rounded-xl bg-yellow-50 text-sm input-focus h-20 resize-none"></textarea>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button id="cancel-edit" onclick="cancelEdit()" class="hidden flex-1 py-4 bg-gray-100 text-gray-400 rounded-2xl font-bold transition">やめる</button>
+                        <button id="save-btn" onclick="saveEntry()" class="flex-[2] py-4 pastel-pink text-white rounded-2xl font-bold hover:opacity-90 transition shadow-md">
+                            心にとめる
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 振り返りセクション -->
+        <section id="timeline-section" class="space-y-4">
+            <h2 class="text-lg font-bold px-2 text-gray-600">これまでの足跡</h2>
+            <div id="entry-list" class="space-y-4">
+                <!-- 記録がここに動的に追加されます -->
+            </div>
+        </section>
+    </main>
+
+    <!-- カレンダービュー -->
+    <main id="calendar-view" class="hidden max-w-md mx-auto p-4">
+        <div class="card p-6 bg-white mb-6">
+            <div class="flex justify-between items-center mb-6">
+                <button onclick="changeMonth(-1)" class="p-2 text-gray-400">❮</button>
+                <h2 id="calendar-month" class="text-lg font-bold text-gray-700">2024年 5月</h2>
+                <button onclick="changeMonth(1)" class="p-2 text-gray-400">❯</button>
+            </div>
+            
+            <div class="calendar-grid mb-2">
+                <div class="text-center text-[10px] font-bold text-red-400">日</div>
+                <div class="text-center text-[10px] font-bold text-gray-400">月</div>
+                <div class="text-center text-[10px] font-bold text-gray-400">火</div>
+                <div class="text-center text-[10px] font-bold text-gray-400">水</div>
+                <div class="text-center text-[10px] font-bold text-gray-400">木</div>
+                <div class="text-center text-[10px] font-bold text-gray-400">金</div>
+                <div class="text-center text-[10px] font-bold text-blue-400">土</div>
+            </div>
+            <div id="calendar-days" class="calendar-grid">
+                <!-- 日付が動的に生成されます -->
+            </div>
+        </div>
+
+        <div id="calendar-detail" class="fade-in hidden">
+            <h3 id="selected-date-label" class="text-sm font-bold text-gray-500 mb-3 px-2">選択した日の記録</h3>
+            <div id="selected-entry-content"></div>
+        </div>
+    </main>
+
+    <!-- 下部ナビゲーション -->
+    <nav class="bottom-nav">
+        <button id="nav-timeline" onclick="switchView('timeline')" class="flex flex-col items-center text-pink-400">
+            <span class="text-xl">✨</span>
+            <span class="text-[10px]">振り返り</span>
+        </button>
+        <button id="nav-calendar" onclick="switchView('calendar')" class="flex flex-col items-center text-gray-400">
+            <span class="text-xl">📅</span>
+            <span class="text-[10px]">カレンダー</span>
+        </button>
+    </nav>
+
+    <script>
+        let entries = JSON.parse(localStorage.getItem('age_entries') || '[]');
+        let currentCalendarDate = new Date(); // カレンダー表示用
+
+        // ビューの切り替え
+        function switchView(view) {
+            const timelineView = document.getElementById('main-view');
+            const calendarView = document.getElementById('calendar-view');
+            const navTimeline = document.getElementById('nav-timeline');
+            const navCalendar = document.getElementById('nav-calendar');
+
+            if (view === 'calendar') {
+                timelineView.classList.add('hidden');
+                calendarView.classList.remove('hidden');
+                navTimeline.classList.replace('text-pink-400', 'text-gray-400');
+                navCalendar.classList.replace('text-gray-400', 'text-pink-400');
+                renderCalendar();
+            } else {
+                timelineView.classList.remove('hidden');
+                calendarView.classList.add('hidden');
+                navTimeline.classList.replace('text-gray-400', 'text-pink-400');
+                navCalendar.classList.replace('text-pink-400', 'text-gray-400');
+                renderEntries();
+            }
+        }
+
+        // カレンダー描画
+        function renderCalendar() {
+            const daysContainer = document.getElementById('calendar-days');
+            const monthLabel = document.getElementById('calendar-month');
+            daysContainer.innerHTML = '';
+
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth();
+            monthLabel.innerText = `${year}年 ${month + 1}月`;
+
+            // 月の最初の日と最後の日
+            const firstDay = new Date(year, month, 1).getDay();
+            const lastDate = new Date(year, month + 1, 0).getDate();
+
+            // 前月の埋め
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement('div');
+                daysContainer.appendChild(empty);
+            }
+
+            // 今月の日付
+            const todayStr = new Date().toLocaleDateString('ja-JP');
+            for (let date = 1; date <= lastDate; date++) {
+                const dateObj = new Date(year, month, date);
+                const dateStr = dateObj.toLocaleDateString('ja-JP');
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day';
+                if (dateStr === todayStr) dayEl.classList.add('today');
+                
+                // 記録があるかチェック
+                const hasEntry = entries.some(e => e.date === dateStr);
+                if (hasEntry) dayEl.classList.add('has-entry');
+
+                dayEl.innerText = date;
+                dayEl.onclick = () => showDateDetail(dateStr);
+                daysContainer.appendChild(dayEl);
+            }
+        }
+
+        function changeMonth(diff) {
+            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + diff);
+            renderCalendar();
+        }
+
+        // 特定の日の詳細を表示
+        function showDateDetail(dateStr) {
+            const detailSection = document.getElementById('calendar-detail');
+            const content = document.getElementById('selected-entry-content');
+            const label = document.getElementById('selected-date-label');
+            
+            const entry = entries.find(e => e.date === dateStr);
+            detailSection.classList.remove('hidden');
+            label.innerText = `${dateStr} の記録`;
+
+            if (entry) {
+                content.innerHTML = `
+                    <div class="card p-4 fade-in">
+                        <div class="space-y-3">
+                            <div>
+                                <p class="text-[10px] text-pink-300 font-bold">楽しかった</p>
+                                <p class="text-sm">${entry.enjoyed}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-blue-300 font-bold">できた</p>
+                                <p class="text-sm">${entry.achieved}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] text-yellow-500 font-bold">感謝した</p>
+                                <p class="text-sm">${entry.thankful}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="text-center py-6 text-gray-400 bg-gray-50 rounded-2xl">
+                        <p class="text-xs">この日の記録はありません 🌱</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 継続日数の計算ロジック
+        function calculateStreak() {
+            if (entries.length === 0) return 0;
+            const uniqueDates = [...new Set(entries.map(e => e.date))].sort((a, b) => new Date(b) - new Date(a));
+            let streak = 0;
+            let today = new Date();
+            today.setHours(0,0,0,0);
+            let lastEntryDate = new Date(uniqueDates[0]);
+            lastEntryDate.setHours(0,0,0,0);
+            const diffDays = (today - lastEntryDate) / (1000 * 60 * 60 * 24);
+            if (diffDays > 1) return 0;
+            let checkDate = new Date(lastEntryDate);
+            const entrySet = new Set(uniqueDates);
+            while (entrySet.has(checkDate.toLocaleDateString('ja-JP'))) {
+                streak++;
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+            return streak;
+        }
+
+        function updateFlowerUI() {
+            const streak = calculateStreak();
+            const iconEl = document.getElementById('flower-icon');
+            const countEl = document.getElementById('streak-count');
+            countEl.innerText = `${streak}日連続`;
+            if (streak >= 3) {
+                iconEl.innerText = '🌸';
+                iconEl.classList.add('flower-badge');
+            } else if (streak === 2) {
+                iconEl.innerText = '🌿';
+            } else if (streak === 1) {
+                iconEl.innerText = '🌱';
+            } else {
+                iconEl.innerText = '💤';
+                countEl.innerText = 'おやすみ中';
+            }
+        }
+
+        function renderEntries() {
+            const list = document.getElementById('entry-list');
+            list.innerHTML = '';
+            updateFlowerUI();
+            if (entries.length === 0) {
+                list.innerHTML = `<div class="text-center py-10 text-gray-400"><div class="text-4xl mb-2">🌿</div><p class="text-sm">まだ記録がありません。<br>今日を心にとめてみませんか？</p></div>`;
+                return;
+            }
+            [...entries].reverse().forEach((entry, index) => {
+                const actualIndex = entries.length - 1 - index;
+                const card = document.createElement('div');
+                card.className = 'card p-4 fade-in mb-4';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-xs font-bold text-gray-400">${entry.date}</span>
+                        <div class="flex gap-4">
+                            <button onclick="editEntry(${actualIndex})" class="text-blue-300 text-xs">✎ 修正</button>
+                            <button onclick="deleteEntry(${actualIndex})" class="text-red-200 text-xs">✕ 削除</button>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div><p class="text-[10px] text-pink-300 font-bold">楽しかった</p><p class="text-sm">${entry.enjoyed}</p></div>
+                        <div><p class="text-[10px] text-blue-300 font-bold">できた</p><p class="text-sm">${entry.achieved}</p></div>
+                        <div><p class="text-[10px] text-yellow-500 font-bold">感謝した</p><p class="text-sm">${entry.thankful}</p></div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function saveEntry() {
+            const enjoyed = document.getElementById('enjoyed').value;
+            const achieved = document.getElementById('achieved').value;
+            const thankful = document.getElementById('thankful').value;
+            const editIndex = parseInt(document.getElementById('edit-index').value);
+
+            if (!enjoyed || !achieved || !thankful) {
+                alert('すべての項目を入力してくださいね ✨');
+                return;
+            }
+
+            if (editIndex > -1) {
+                entries[editIndex].enjoyed = enjoyed;
+                entries[editIndex].achieved = achieved;
+                entries[editIndex].thankful = thankful;
+                cancelEdit();
+            } else {
+                const dateStr = new Date().toLocaleDateString('ja-JP');
+                const alreadyEntryToday = entries.some(e => e.date === dateStr);
+                entries.push({ date: dateStr, enjoyed, achieved, thankful });
+                if (calculateStreak() === 3 && !alreadyEntryToday) {
+                    const celeb = document.getElementById('celebration');
+                    celeb.style.display = 'block';
+                    setTimeout(() => { celeb.style.display = 'none'; }, 5000);
+                }
+            }
+            localStorage.setItem('age_entries', JSON.stringify(entries));
+            document.getElementById('enjoyed').value = '';
+            document.getElementById('achieved').value = '';
+            document.getElementById('thankful').value = '';
+            renderEntries();
+        }
+
+        function editEntry(index) {
+            const entry = entries[index];
+            document.getElementById('enjoyed').value = entry.enjoyed;
+            document.getElementById('achieved').value = entry.achieved;
+            document.getElementById('thankful').value = entry.thankful;
+            document.getElementById('edit-index').value = index;
+            document.getElementById('form-title').innerText = "記録を修正する";
+            document.getElementById('save-btn').innerText = "修正を保存する";
+            document.getElementById('cancel-edit').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            document.getElementById('enjoyed').value = '';
+            document.getElementById('achieved').value = '';
+            document.getElementById('thankful').value = '';
+            document.getElementById('edit-index').value = "-1";
+            document.getElementById('form-title').innerText = "今日を記録する";
+            document.getElementById('save-btn').innerText = "心にとめる";
+            document.getElementById('cancel-edit').classList.add('hidden');
+        }
+
+        function deleteEntry(index) {
+            if (confirm('この記録を消してもよろしいですか？')) {
+                entries.splice(index, 1);
+                localStorage.setItem('age_entries', JSON.stringify(entries));
+                renderEntries();
+                if (!document.getElementById('calendar-view').classList.contains('hidden')) {
+                    renderCalendar();
+                }
+            }
+        }
+
+        window.onload = () => {
+            renderEntries();
+            setTimeout(() => {
+                const reminder = document.getElementById('reminder');
+                reminder.style.display = 'block';
+                setTimeout(() => { reminder.style.display = 'none'; }, 4000);
+            }, 1000);
+        };
+    </script>
+</body>
+</html>
