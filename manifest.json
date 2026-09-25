@@ -1,7 +1,7 @@
 {
-  "name": "もじれん",
-  "short_name": "もじれん",
-  "start_url": "index.html",
+  "name": "あげあげ",
+  "short_name": "あげあげ",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#FFF9FB",
   "theme_color": "#F8BBD0",

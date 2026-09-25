@@ -110,8 +110,8 @@
         <div class="w-10"></div>
         <h1 class="text-2xl font-bold tracking-wider">あげあげ</h1>
         <div id="streak-status" class="flex flex-col items-center">
-            <div id="flower-icon" class="text-2xl flower-badge">🌱</div>
-            <div id="streak-count" class="text-[10px] font-bold text-gray-400">0日目</div>
+            <div id="flower-icon" class="text-2xl">💤</div>
+            <div id="streak-count" class="text-[10px] font-bold text-gray-400">おやすみ中</div>
         </div>
     </header>
 
@@ -125,19 +125,19 @@
                 
                 <div class="space-y-4">
                     <div>
-                        <label class="text-xs font-bold text-pink-400 flex items-center mb-1">
+                        <label for="enjoyed" class="text-xs font-bold text-pink-400 flex items-center mb-1">
                             <span class="mr-1">😊</span> 楽しかったこと
                         </label>
                         <textarea id="enjoyed" maxlength="140" placeholder="例：美味しいコーヒーを飲んだ" class="w-full p-3 rounded-xl bg-pink-50 text-sm input-focus h-20 resize-none"></textarea>
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-blue-400 flex items-center mb-1">
+                        <label for="achieved" class="text-xs font-bold text-blue-400 flex items-center mb-1">
                             <span class="mr-1">✅</span> できたこと
                         </label>
                         <textarea id="achieved" maxlength="140" placeholder="例：5分だけ掃除ができた" class="w-full p-3 rounded-xl bg-blue-50 text-sm input-focus h-20 resize-none"></textarea>
                     </div>
                     <div>
-                        <label class="text-xs font-bold text-yellow-500 flex items-center mb-1">
+                        <label for="thankful" class="text-xs font-bold text-yellow-500 flex items-center mb-1">
                             <span class="mr-1">🧡</span> 感謝したこと
                         </label>
                         <textarea id="thankful" maxlength="140" placeholder="例：同僚が手伝ってくれた" class="w-full p-3 rounded-xl bg-yellow-50 text-sm input-focus h-20 resize-none"></textarea>
@@ -167,7 +167,7 @@
         <div class="card p-6 bg-white mb-6">
             <div class="flex justify-between items-center mb-6">
                 <button onclick="changeMonth(-1)" class="p-2 text-gray-400">❮</button>
-                <h2 id="calendar-month" class="text-lg font-bold text-gray-700">2024年 5月</h2>
+                <h2 id="calendar-month" class="text-lg font-bold text-gray-700"></h2>
                 <button onclick="changeMonth(1)" class="p-2 text-gray-400">❯</button>
             </div>
             
@@ -204,8 +204,76 @@
     </nav>
 
     <script>
-        let entries = JSON.parse(localStorage.getItem('age_entries') || '[]');
-        let currentCalendarDate = new Date(); // カレンダー表示用
+        let entries = loadEntries();
+        let currentCalendarDate = new Date();
+
+        function dateKey(date) {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function normalizeDate(value) {
+            if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+            const matched = String(value ?? '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+            if (matched) {
+                return `${matched[1]}-${matched[2].padStart(2, '0')}-${matched[3].padStart(2, '0')}`;
+            }
+            return dateKey(new Date());
+        }
+
+        function parseDateKey(key) {
+            const [y, m, d] = key.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+
+        function formatDateLabel(key) {
+            const date = parseDateKey(key);
+            return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function entryCardHtml(entry) {
+            return `
+                <div class="space-y-3">
+                    <div><p class="text-[10px] text-pink-300 font-bold">楽しかった</p><p class="text-sm whitespace-pre-wrap">${escapeHtml(entry.enjoyed)}</p></div>
+                    <div><p class="text-[10px] text-blue-300 font-bold">できた</p><p class="text-sm whitespace-pre-wrap">${escapeHtml(entry.achieved)}</p></div>
+                    <div><p class="text-[10px] text-yellow-500 font-bold">感謝した</p><p class="text-sm whitespace-pre-wrap">${escapeHtml(entry.thankful)}</p></div>
+                </div>
+            `;
+        }
+
+        function loadEntries() {
+            let stored = [];
+            try {
+                stored = JSON.parse(localStorage.getItem('age_entries') || '[]');
+            } catch (error) {
+                stored = [];
+            }
+            if (!Array.isArray(stored)) stored = [];
+            const normalized = stored
+                .filter((entry) => entry && typeof entry === 'object')
+                .map((entry) => ({
+                    date: normalizeDate(entry.date),
+                    enjoyed: String(entry.enjoyed ?? ''),
+                    achieved: String(entry.achieved ?? ''),
+                    thankful: String(entry.thankful ?? '')
+                }));
+            localStorage.setItem('age_entries', JSON.stringify(normalized));
+            return normalized;
+        }
+
+        function saveEntries() {
+            localStorage.setItem('age_entries', JSON.stringify(entries));
+        }
 
         // ビューの切り替え
         function switchView(view) {
@@ -250,15 +318,13 @@
             }
 
             // 今月の日付
-            const todayStr = new Date().toLocaleDateString('ja-JP');
+            const todayStr = dateKey(new Date());
             for (let date = 1; date <= lastDate; date++) {
-                const dateObj = new Date(year, month, date);
-                const dateStr = dateObj.toLocaleDateString('ja-JP');
+                const dateStr = dateKey(new Date(year, month, date));
                 const dayEl = document.createElement('div');
                 dayEl.className = 'calendar-day';
                 if (dateStr === todayStr) dayEl.classList.add('today');
-                
-                // 記録があるかチェック
+
                 const hasEntry = entries.some(e => e.date === dateStr);
                 if (hasEntry) dayEl.classList.add('has-entry');
 
@@ -269,7 +335,9 @@
         }
 
         function changeMonth(diff) {
-            currentCalendarDate.setMonth(currentCalendarDate.getMonth() + diff);
+            const year = currentCalendarDate.getFullYear();
+            const month = currentCalendarDate.getMonth() + diff;
+            currentCalendarDate = new Date(year, month, 1);
             renderCalendar();
         }
 
@@ -279,29 +347,16 @@
             const content = document.getElementById('selected-entry-content');
             const label = document.getElementById('selected-date-label');
             
-            const entry = entries.find(e => e.date === dateStr);
+            const dayEntries = entries.filter(e => e.date === dateStr);
             detailSection.classList.remove('hidden');
-            label.innerText = `${dateStr} の記録`;
+            label.innerText = `${formatDateLabel(dateStr)} の記録`;
 
-            if (entry) {
-                content.innerHTML = `
-                    <div class="card p-4 fade-in">
-                        <div class="space-y-3">
-                            <div>
-                                <p class="text-[10px] text-pink-300 font-bold">楽しかった</p>
-                                <p class="text-sm">${entry.enjoyed}</p>
-                            </div>
-                            <div>
-                                <p class="text-[10px] text-blue-300 font-bold">できた</p>
-                                <p class="text-sm">${entry.achieved}</p>
-                            </div>
-                            <div>
-                                <p class="text-[10px] text-yellow-500 font-bold">感謝した</p>
-                                <p class="text-sm">${entry.thankful}</p>
-                            </div>
-                        </div>
+            if (dayEntries.length > 0) {
+                content.innerHTML = [...dayEntries].reverse().map((entry) => `
+                    <div class="card p-4 fade-in mb-4">
+                        ${entryCardHtml(entry)}
                     </div>
-                `;
+                `).join('');
             } else {
                 content.innerHTML = `
                     <div class="text-center py-6 text-gray-400 bg-gray-50 rounded-2xl">
@@ -314,17 +369,17 @@
         // 継続日数の計算ロジック
         function calculateStreak() {
             if (entries.length === 0) return 0;
-            const uniqueDates = [...new Set(entries.map(e => e.date))].sort((a, b) => new Date(b) - new Date(a));
-            let streak = 0;
-            let today = new Date();
-            today.setHours(0,0,0,0);
-            let lastEntryDate = new Date(uniqueDates[0]);
-            lastEntryDate.setHours(0,0,0,0);
-            const diffDays = (today - lastEntryDate) / (1000 * 60 * 60 * 24);
+            const uniqueDates = [...new Set(entries.map(e => e.date))].sort().reverse();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const lastEntryDate = parseDateKey(uniqueDates[0]);
+            const diffDays = Math.round((today - lastEntryDate) / (1000 * 60 * 60 * 24));
             if (diffDays > 1) return 0;
-            let checkDate = new Date(lastEntryDate);
+
+            let streak = 0;
             const entrySet = new Set(uniqueDates);
-            while (entrySet.has(checkDate.toLocaleDateString('ja-JP'))) {
+            const checkDate = new Date(lastEntryDate);
+            while (entrySet.has(dateKey(checkDate))) {
                 streak++;
                 checkDate.setDate(checkDate.getDate() - 1);
             }
@@ -335,14 +390,17 @@
             const streak = calculateStreak();
             const iconEl = document.getElementById('flower-icon');
             const countEl = document.getElementById('streak-count');
-            countEl.innerText = `${streak}日連続`;
+            iconEl.classList.remove('flower-badge');
             if (streak >= 3) {
                 iconEl.innerText = '🌸';
                 iconEl.classList.add('flower-badge');
+                countEl.innerText = `${streak}日連続`;
             } else if (streak === 2) {
                 iconEl.innerText = '🌿';
+                countEl.innerText = `${streak}日連続`;
             } else if (streak === 1) {
                 iconEl.innerText = '🌱';
+                countEl.innerText = `${streak}日連続`;
             } else {
                 iconEl.innerText = '💤';
                 countEl.innerText = 'おやすみ中';
@@ -363,40 +421,36 @@
                 card.className = 'card p-4 fade-in mb-4';
                 card.innerHTML = `
                     <div class="flex justify-between items-center mb-3">
-                        <span class="text-xs font-bold text-gray-400">${entry.date}</span>
+                        <span class="text-xs font-bold text-gray-400">${formatDateLabel(entry.date)}</span>
                         <div class="flex gap-4">
                             <button onclick="editEntry(${actualIndex})" class="text-blue-300 text-xs">✎ 修正</button>
                             <button onclick="deleteEntry(${actualIndex})" class="text-red-200 text-xs">✕ 削除</button>
                         </div>
                     </div>
-                    <div class="space-y-3">
-                        <div><p class="text-[10px] text-pink-300 font-bold">楽しかった</p><p class="text-sm">${entry.enjoyed}</p></div>
-                        <div><p class="text-[10px] text-blue-300 font-bold">できた</p><p class="text-sm">${entry.achieved}</p></div>
-                        <div><p class="text-[10px] text-yellow-500 font-bold">感謝した</p><p class="text-sm">${entry.thankful}</p></div>
-                    </div>
+                    ${entryCardHtml(entry)}
                 `;
                 list.appendChild(card);
             });
         }
 
         function saveEntry() {
-            const enjoyed = document.getElementById('enjoyed').value;
-            const achieved = document.getElementById('achieved').value;
-            const thankful = document.getElementById('thankful').value;
-            const editIndex = parseInt(document.getElementById('edit-index').value);
+            const enjoyed = document.getElementById('enjoyed').value.trim();
+            const achieved = document.getElementById('achieved').value.trim();
+            const thankful = document.getElementById('thankful').value.trim();
+            const editIndex = parseInt(document.getElementById('edit-index').value, 10);
 
             if (!enjoyed || !achieved || !thankful) {
                 alert('すべての項目を入力してくださいね ✨');
                 return;
             }
 
-            if (editIndex > -1) {
+            if (editIndex > -1 && entries[editIndex]) {
                 entries[editIndex].enjoyed = enjoyed;
                 entries[editIndex].achieved = achieved;
                 entries[editIndex].thankful = thankful;
                 cancelEdit();
             } else {
-                const dateStr = new Date().toLocaleDateString('ja-JP');
+                const dateStr = dateKey(new Date());
                 const alreadyEntryToday = entries.some(e => e.date === dateStr);
                 entries.push({ date: dateStr, enjoyed, achieved, thankful });
                 if (calculateStreak() === 3 && !alreadyEntryToday) {
@@ -405,7 +459,7 @@
                     setTimeout(() => { celeb.style.display = 'none'; }, 5000);
                 }
             }
-            localStorage.setItem('age_entries', JSON.stringify(entries));
+            saveEntries();
             document.getElementById('enjoyed').value = '';
             document.getElementById('achieved').value = '';
             document.getElementById('thankful').value = '';
@@ -436,8 +490,14 @@
 
         function deleteEntry(index) {
             if (confirm('この記録を消してもよろしいですか？')) {
+                const editing = parseInt(document.getElementById('edit-index').value, 10);
                 entries.splice(index, 1);
-                localStorage.setItem('age_entries', JSON.stringify(entries));
+                if (editing === index) {
+                    cancelEdit();
+                } else if (editing > index) {
+                    document.getElementById('edit-index').value = String(editing - 1);
+                }
+                saveEntries();
                 renderEntries();
                 if (!document.getElementById('calendar-view').classList.contains('hidden')) {
                     renderCalendar();
@@ -447,6 +507,10 @@
 
         window.onload = () => {
             renderEntries();
+            renderCalendar();
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js').catch(() => {});
+            }
             setTimeout(() => {
                 const reminder = document.getElementById('reminder');
                 reminder.style.display = 'block';
