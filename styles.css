@@ -1,0 +1,79 @@
+/* あげあげの画面。ログイン前には渡さない。 */
+body {
+    font-family: 'Zen Maru Gothic', sans-serif;
+    background-color: #FFF9FB;
+    color: #5D4037;
+}
+.pastel-pink { background-color: #F8BBD0; }
+.card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    z-index: 50;
+}
+.input-focus:focus {
+    outline: 2px solid #F8BBD0;
+    border-color: transparent;
+}
+.notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #FFF176;
+    padding: 12px 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    display: none;
+    z-index: 100;
+}
+.flower-badge {
+    animation: bounce 2s infinite;
+}
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+.fade-in {
+    animation: fadeIn 0.4s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+.calendar-day {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.calendar-day:hover { background-color: #FFF1F5; }
+.calendar-day.today { border: 2px solid #F8BBD0; font-weight: bold; }
+.calendar-day.has-entry::after {
+    content: '';
+    width: 4px;
+    height: 4px;
+    background-color: #F8BBD0;
+    border-radius: 50%;
+    margin-top: 2px;
+}
